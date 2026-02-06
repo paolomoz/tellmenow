@@ -2,28 +2,18 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { useSession, signIn } from "next-auth/react";
 import { ChatInput } from "@/components/chat/chat-input";
 import { useStartQuery, useSkills } from "@/lib/hooks/use-query";
 import { Skill } from "@/types/job";
 
 export function HomeHero() {
   const router = useRouter();
-  const { data: session, status } = useSession();
   const startQuery = useStartQuery();
   const { data: skills } = useSkills();
   const [selectedSkill, setSelectedSkill] = useState<Skill | null>(null);
-  const [showAuthPrompt, setShowAuthPrompt] = useState(false);
-  const [pendingText, setPendingText] = useState("");
 
   const handleSubmit = async (text: string) => {
     if (!selectedSkill) return;
-
-    if (!session) {
-      setPendingText(text);
-      setShowAuthPrompt(true);
-      return;
-    }
 
     try {
       const result = await startQuery.mutateAsync({
@@ -55,7 +45,7 @@ export function HomeHero() {
             ? `Ask about ${selectedSkill.name.toLowerCase()}...`
             : "Select a skill below, then ask your question..."
         }
-        disabled={!selectedSkill || startQuery.isPending || status === "loading"}
+        disabled={!selectedSkill || startQuery.isPending}
       />
 
       {startQuery.isError && (
@@ -99,48 +89,6 @@ export function HomeHero() {
           More skills coming soon
         </span>
       </div>
-
-      {/* Auth prompt modal */}
-      {showAuthPrompt && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
-          <div className="w-full max-w-md mx-4 rounded-[var(--radius-lg)] border border-border bg-card p-6 shadow-xl">
-            <div className="text-center space-y-4">
-              <div className="mx-auto w-12 h-12 rounded-full bg-muted flex items-center justify-center">
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" className="text-foreground">
-                  <circle cx="12" cy="8" r="4" stroke="currentColor" strokeWidth="2" />
-                  <path d="M4 20c0-4 4-6 8-6s8 2 8 6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
-                </svg>
-              </div>
-              <div>
-                <h2 className="text-lg font-semibold">Sign in to continue</h2>
-                <p className="text-sm text-muted mt-1">
-                  Create an account to submit queries and save your results.
-                </p>
-              </div>
-              <div className="space-y-2 pt-2">
-                <button
-                  onClick={() => signIn("google")}
-                  className="flex w-full items-center justify-center gap-2 rounded-[var(--radius-md)] bg-foreground text-background px-4 py-2.5 text-sm font-medium hover:bg-foreground/90 transition-colors cursor-pointer"
-                >
-                  Continue with Google
-                </button>
-                <button
-                  onClick={() => signIn("github")}
-                  className="flex w-full items-center justify-center gap-2 rounded-[var(--radius-md)] border border-border px-4 py-2.5 text-sm font-medium hover:bg-accent transition-colors cursor-pointer"
-                >
-                  Continue with GitHub
-                </button>
-              </div>
-              <button
-                onClick={() => setShowAuthPrompt(false)}
-                className="text-sm text-muted hover:text-foreground transition-colors cursor-pointer pt-2"
-              >
-                Cancel
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 }

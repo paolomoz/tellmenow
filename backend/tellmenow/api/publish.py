@@ -1,10 +1,8 @@
 import uuid
 from datetime import datetime, timezone
-from typing import Annotated
 
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, HTTPException
 
-from tellmenow.api.auth import User, get_current_user, get_optional_user
 from tellmenow.api.schemas import PublishRequest, PublishResponse, PublishedPageResponse
 from tellmenow.db import get_db
 from tellmenow.jobs.manager import job_manager
@@ -13,15 +11,9 @@ router = APIRouter(prefix="/api", tags=["publish"])
 
 
 @router.post("/publish", response_model=PublishResponse)
-async def publish_page(
-    request: PublishRequest,
-    user: Annotated[User, Depends(get_current_user)],
-):
+async def publish_page(request: PublishRequest):
     job = job_manager.get_job(request.job_id)
     if not job:
-        raise HTTPException(status_code=404, detail="Job not found")
-
-    if job.user_id and job.user_id != user.id:
         raise HTTPException(status_code=404, detail="Job not found")
 
     if not job.html_report:
@@ -34,7 +26,7 @@ async def publish_page(
     await db.execute(
         """INSERT INTO published_pages (id, job_id, user_id, title, html, skill_id, query, created_at)
            VALUES (?, ?, ?, ?, ?, ?, ?, ?)""",
-        (published_id, job.id, user.id, job.report_title or job.query[:80], job.html_report, job.skill_id, job.query, now),
+        (published_id, job.id, "anon", job.report_title or job.query[:80], job.html_report, job.skill_id, job.query, now),
     )
     await db.commit()
 

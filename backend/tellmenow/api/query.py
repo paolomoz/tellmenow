@@ -1,10 +1,8 @@
 import asyncio
-from typing import Annotated
 
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, HTTPException
 from sse_starlette.sse import EventSourceResponse
 
-from tellmenow.api.auth import User, get_current_user
 from tellmenow.api.schemas import (
     QueryRequest,
     QueryResponse,
@@ -20,29 +18,20 @@ router = APIRouter(prefix="/api", tags=["query"])
 
 
 @router.post("/query", response_model=QueryResponse)
-async def create_query(
-    request: QueryRequest,
-    user: Annotated[User, Depends(get_current_user)],
-):
+async def create_query(request: QueryRequest):
     job = job_manager.create_job(
         query=request.query,
         skill_id=request.skill_id,
-        user_id=user.id,
+        user_id="anon",
     )
     asyncio.create_task(run_pipeline(job))
     return QueryResponse(job_id=job.id)
 
 
 @router.get("/jobs/{job_id}", response_model=JobStatusResponse)
-async def get_job_status(
-    job_id: str,
-    user: Annotated[User, Depends(get_current_user)],
-):
+async def get_job_status(job_id: str):
     job = job_manager.get_job(job_id)
     if not job:
-        raise HTTPException(status_code=404, detail="Job not found")
-
-    if job.user_id and job.user_id != user.id:
         raise HTTPException(status_code=404, detail="Job not found")
 
     progress = JobProgress(
@@ -74,15 +63,9 @@ async def get_job_status(
 
 
 @router.get("/jobs/{job_id}/stream")
-async def stream_job(
-    job_id: str,
-    user: Annotated[User, Depends(get_current_user)],
-):
+async def stream_job(job_id: str):
     job = job_manager.get_job(job_id)
     if not job:
-        raise HTTPException(status_code=404, detail="Job not found")
-
-    if job.user_id and job.user_id != user.id:
         raise HTTPException(status_code=404, detail="Job not found")
 
     return EventSourceResponse(job_manager.sse_generator(job_id))
