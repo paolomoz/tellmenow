@@ -1,0 +1,118 @@
+"use client";
+
+import { useRouter, usePathname } from "next/navigation";
+import { useUIStore } from "@/lib/stores/ui-store";
+import { cn } from "@/lib/utils";
+
+export function Sidebar() {
+  const router = useRouter();
+  const pathname = usePathname();
+  const { sidebarOpen, toggleSidebar } = useUIStore();
+
+  const navigate = (path: string) => {
+    router.push(path);
+    if (window.innerWidth < 1024) toggleSidebar();
+  };
+
+  return (
+    <>
+      {sidebarOpen && (
+        <div
+          className="fixed inset-0 z-40 bg-black/50 lg:hidden"
+          onClick={toggleSidebar}
+          aria-label="Close sidebar"
+        />
+      )}
+
+      <aside
+        className={cn(
+          "fixed left-0 top-0 z-50 h-full w-64 border-r border-border bg-card transition-transform duration-200",
+          "lg:static lg:translate-x-0",
+          sidebarOpen ? "translate-x-0" : "-translate-x-full"
+        )}
+      >
+        <div className="flex h-full flex-col">
+          <div className="flex items-center justify-between border-b border-border px-4 py-4">
+            <button
+              onClick={() => navigate("/")}
+              className="flex items-center gap-2 hover:opacity-80 transition-opacity cursor-pointer"
+            >
+              <div className="h-8 w-8 rounded-full bg-primary flex items-center justify-center">
+                <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
+                  <path d="M9 2v14M2 9h14" stroke="white" strokeWidth="2" strokeLinecap="round" />
+                </svg>
+              </div>
+              <span className="text-lg font-semibold">TellMeNow</span>
+            </button>
+            <button
+              onClick={toggleSidebar}
+              className="lg:hidden flex h-8 w-8 items-center justify-center rounded-[var(--radius-md)] hover:bg-accent transition-colors cursor-pointer"
+              aria-label="Close sidebar"
+            >
+              <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
+                <path d="M4 4l10 10M14 4L4 14" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+              </svg>
+            </button>
+          </div>
+
+          <div className="p-3">
+            <button
+              onClick={() => navigate("/")}
+              className="flex w-full items-center gap-2 rounded-[var(--radius-md)] px-3 py-2.5 text-sm font-medium hover:bg-accent transition-colors cursor-pointer"
+            >
+              <svg width="16" height="16" viewBox="0 0 16 16" fill="none" className="shrink-0">
+                <path d="M8 3v10M3 8h10" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+              </svg>
+              New Query
+            </button>
+          </div>
+
+          <nav className="flex-1 overflow-y-auto px-3 py-2">
+            <div className="mb-2 px-3 text-xs font-medium text-muted uppercase tracking-wider">
+              Navigation
+            </div>
+            <div className="space-y-0.5">
+              <SidebarLink
+                icon="home"
+                label="Home"
+                active={pathname === "/"}
+                onClick={() => navigate("/")}
+              />
+            </div>
+          </nav>
+        </div>
+      </aside>
+    </>
+  );
+}
+
+function SidebarLink({
+  icon,
+  label,
+  active,
+  onClick,
+}: {
+  icon: string;
+  label: string;
+  active?: boolean;
+  onClick?: () => void;
+}) {
+  return (
+    <button
+      onClick={onClick}
+      className={cn(
+        "flex w-full items-center gap-2 rounded-[var(--radius-md)] px-3 py-2 text-sm transition-colors cursor-pointer",
+        active
+          ? "bg-accent font-medium text-foreground"
+          : "text-muted hover:bg-accent hover:text-foreground"
+      )}
+    >
+      {icon === "home" && (
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+          <path d="M2 8l6-6 6 6M4 7v5.5a1 1 0 001 1h6a1 1 0 001-1V7" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+        </svg>
+      )}
+      {label}
+    </button>
+  );
+}
