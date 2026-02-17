@@ -37,9 +37,9 @@ api.route("/", auth);
 api.route("/", history);
 api.route("/", skillRequests);
 
-// SPA fallback: serve index.html for non-API routes
+// SPA fallback: serve static assets or index.html for non-API routes
 app.get("*", async (c) => {
-  return c.env.ASSETS.fetch(new Request(new URL("/index.html", c.req.url)));
+  return c.env.ASSETS.fetch(c.req.raw);
 });
 
 export default app;

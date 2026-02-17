@@ -4,6 +4,7 @@ compatibility_date = "2025-02-14"
 
 [assets]
 directory = "../frontend/dist"
+binding = "ASSETS"
 not_found_handling = "single-page-application"
 
 [vars]
