@@ -1,6 +1,6 @@
 import { Skill } from "../../../types";
 
-const SKILL_CONTENT = `# Site Estimator
+const SKILL_CONTENT = `# Site Overviewer
 
 Estimate the total number of pages across a website or brand portfolio, producing a structured inventory for migration scoping.
 
@@ -94,7 +94,7 @@ Use these approaches in priority order:
 - If a domain has no sitemap and cannot be easily sampled, say so rather than guessing`;
 
 const REFERENCES: Record<string, string> = {
-  "output-format.md": `# Site Estimator — Output Format
+  "output-format.md": `# Site Overviewer — Output Format
 
 The output is a structured report with the following sections. All sections are required unless marked optional.
 
@@ -416,7 +416,7 @@ This is a real example produced for the KION Group (4 brands: KION, STILL, Baoli
 
 export const siteEstimatorSkill: Skill = {
   id: "site-estimator",
-  name: "Site Estimator",
+  name: "Site Overviewer",
   description:
     'Estimate total page counts for websites and brand portfolios to scope migration efforts. Analyzes sitemaps, crawls site structures, identifies regional/language variants, and produces structured page inventories with content breakdowns. Use when user asks to "estimate pages", "how big is this website", "scope a migration", "count pages", or needs to estimate credits for Experience Modernization Agent migrations.',
   content: SKILL_CONTENT,

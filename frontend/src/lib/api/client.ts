@@ -1,10 +1,11 @@
-import { Skill, QueryRequest, JobStatus } from "@/types/job";
+import { Skill, QueryRequest, JobStatus, SessionUser, HistoryJob } from "@/types/job";
 
 const API_BASE = "/api";
 
 async function fetchJson<T>(url: string, options?: RequestInit): Promise<T> {
   const response = await fetch(`${API_BASE}${url}`, {
     headers: { "Content-Type": "application/json" },
+    credentials: "include",
     ...options,
   });
   if (!response.ok) {
@@ -51,4 +52,33 @@ export async function fetchPublishedPage(pageId: string): Promise<{
   created_at: string;
 }> {
   return fetchJson(`/p/${pageId}`);
+}
+
+// ── Auth ────────────────────────────────────────────
+
+export async function fetchSession(): Promise<{ user: SessionUser | null }> {
+  return fetchJson("/auth/session");
+}
+
+export async function logout(): Promise<void> {
+  await fetchJson("/auth/logout", { method: "POST" });
+}
+
+export async function fetchHistory(limit = 50, offset = 0): Promise<{ jobs: HistoryJob[] }> {
+  return fetchJson(`/history?limit=${limit}&offset=${offset}`);
+}
+
+// ── Skill Requests ──────────────────────────────────
+
+export async function submitSkillRequest(
+  description: string,
+  additionalContext?: string,
+): Promise<{ id: string }> {
+  return fetchJson("/skill-requests", {
+    method: "POST",
+    body: JSON.stringify({
+      description,
+      additional_context: additionalContext,
+    }),
+  });
 }

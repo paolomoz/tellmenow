@@ -2,13 +2,13 @@ import { Job, JobStatus, PublishedPage } from "../types";
 
 export async function insertJob(
   db: D1Database,
-  job: { id: string; query: string; skill_id: string; created_at: string },
+  job: { id: string; query: string; skill_id: string; user_id: string | null; created_at: string },
 ): Promise<void> {
   await db
     .prepare(
-      "INSERT INTO jobs (id, query, skill_id, status, created_at) VALUES (?, ?, ?, 'queued', ?)",
+      "INSERT INTO jobs (id, query, skill_id, status, user_id, created_at) VALUES (?, ?, ?, 'queued', ?, ?)",
     )
-    .bind(job.id, job.query, job.skill_id, job.created_at)
+    .bind(job.id, job.query, job.skill_id, job.user_id, job.created_at)
     .run();
 }
 
@@ -85,4 +85,46 @@ export async function getPublishedPage(
     .bind(id)
     .first();
   return row ? (row as unknown as PublishedPage) : null;
+}
+
+export async function insertSkillRequest(
+  db: D1Database,
+  request: {
+    id: string;
+    user_id: string | null;
+    description: string;
+    additional_context: string | null;
+    created_at: string;
+  },
+): Promise<void> {
+  await db
+    .prepare(
+      "INSERT INTO skill_requests (id, user_id, description, additional_context, created_at) VALUES (?, ?, ?, ?, ?)",
+    )
+    .bind(
+      request.id,
+      request.user_id,
+      request.description,
+      request.additional_context,
+      request.created_at,
+    )
+    .run();
+}
+
+export async function getJobsByUser(
+  db: D1Database,
+  userId: string,
+  limit = 50,
+  offset = 0,
+): Promise<Pick<Job, "id" | "query" | "skill_id" | "status" | "report_title" | "created_at">[]> {
+  const rows = await db
+    .prepare(
+      "SELECT id, query, skill_id, status, report_title, created_at FROM jobs WHERE user_id = ? ORDER BY created_at DESC LIMIT ? OFFSET ?",
+    )
+    .bind(userId, limit, offset)
+    .all();
+  return (rows.results ?? []) as unknown as Pick<
+    Job,
+    "id" | "query" | "skill_id" | "status" | "report_title" | "created_at"
+  >[];
 }

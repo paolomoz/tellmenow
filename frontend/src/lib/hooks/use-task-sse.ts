@@ -43,7 +43,7 @@ export function useTaskSSE(jobId: string | null) {
   useEffect(() => {
     if (!jobId) return;
 
-    const es = new EventSource(`/api/jobs/${jobId}/stream`);
+    const es = new EventSource(`/api/jobs/${jobId}/stream`, { withCredentials: true });
     esRef.current = es;
 
     es.onopen = () => {

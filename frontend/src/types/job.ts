@@ -41,3 +41,19 @@ export interface JobStatus {
   query: string | null;
   skill_id: string | null;
 }
+
+export interface SessionUser {
+  id: string;
+  name: string | null;
+  email: string | null;
+  image: string | null;
+}
+
+export interface HistoryJob {
+  id: string;
+  query: string;
+  skill_id: string;
+  status: string;
+  report_title: string | null;
+  created_at: string;
+}

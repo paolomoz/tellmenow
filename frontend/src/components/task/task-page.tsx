@@ -1,6 +1,7 @@
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useTaskSSE } from "@/lib/hooks/use-task-sse";
 import { useJobStatus } from "@/lib/hooks/use-query";
+import { useQueryClient } from "@tanstack/react-query";
 import { ProgressBar } from "@/components/ui/progress-bar";
 import { publishReport } from "@/lib/api/client";
 import { cn } from "@/lib/utils";
@@ -12,11 +13,21 @@ interface TaskPageProps {
 export function TaskPage({ jobId }: TaskPageProps) {
   const sse = useTaskSSE(jobId);
   const { data: jobData } = useJobStatus(jobId);
+  const queryClient = useQueryClient();
   const [publishing, setPublishing] = useState(false);
   const [publishedUrl, setPublishedUrl] = useState<string | null>(null);
   const [publishError, setPublishError] = useState<string | null>(null);
+  const invalidatedRef = useRef(false);
 
   const status = sse.status || jobData?.status || "queued";
+
+  // Invalidate history cache when task completes so sidebar updates
+  useEffect(() => {
+    if ((status === "completed" || status === "failed") && !invalidatedRef.current) {
+      invalidatedRef.current = true;
+      queryClient.invalidateQueries({ queryKey: ["history"] });
+    }
+  }, [status, queryClient]);
   const progress = sse.progress || jobData?.progress?.progress || 0;
   const message = sse.message || jobData?.progress?.message || "Starting...";
   const isComplete = status === "completed";

@@ -2,6 +2,9 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { ChatInput } from "@/components/chat/chat-input";
 import { useStartQuery, useSkills } from "@/lib/hooks/use-query";
+import { useAuthStore } from "@/lib/stores/auth-store";
+import { LoginModal } from "@/components/auth/login-modal";
+import { SkillRequestModal } from "@/components/skill-request/skill-request-modal";
 import { Skill } from "@/types/job";
 
 export function HomeHero() {
@@ -9,10 +12,18 @@ export function HomeHero() {
   const startQuery = useStartQuery();
   const { data: skills } = useSkills();
   const [selectedSkill, setSelectedSkill] = useState<Skill | null>(null);
+  const [showAuth, setShowAuth] = useState(false);
+  const [showSkillRequest, setShowSkillRequest] = useState(false);
+  const [pendingQuery, setPendingQuery] = useState<string | null>(null);
+  const user = useAuthStore((s) => s.user);
 
-  const handleSubmit = async (text: string) => {
+  const placeholderMap: Record<string, string> = {
+    "site-estimator": "Enter a website or a brand name..",
+  };
+  const defaultPlaceholder = "Enter a website or a brand name..";
+
+  const submitQuery = async (text: string) => {
     if (!selectedSkill) return;
-
     try {
       const result = await startQuery.mutateAsync({
         query: text,
@@ -21,6 +32,27 @@ export function HomeHero() {
       navigate(`/task/${result.job_id}`);
     } catch {
       // error handled by mutation state
+    }
+  };
+
+  const handleSubmit = async (text: string) => {
+    if (!selectedSkill) return;
+
+    if (!user) {
+      setPendingQuery(text);
+      setShowAuth(true);
+      return;
+    }
+
+    await submitQuery(text);
+  };
+
+  // After login, retry the pending query
+  const handleAuthClose = () => {
+    setShowAuth(false);
+    if (pendingQuery && user) {
+      submitQuery(pendingQuery);
+      setPendingQuery(null);
     }
   };
 
@@ -40,7 +72,7 @@ export function HomeHero() {
         onSubmit={handleSubmit}
         placeholder={
           selectedSkill
-            ? `Ask about ${selectedSkill.name.toLowerCase()}...`
+            ? placeholderMap[selectedSkill.id] || defaultPlaceholder
             : "Select a skill below, then ask your question..."
         }
         disabled={!selectedSkill || startQuery.isPending}
@@ -79,14 +111,21 @@ export function HomeHero() {
           </button>
         ))}
 
-        {/* Placeholder for future skills */}
-        <span className="inline-flex items-center gap-1.5 rounded-[var(--radius-full)] border border-border bg-card px-4 py-2 text-sm font-medium text-muted-foreground opacity-50 cursor-default select-none">
+        {/* Request new skills */}
+        <button
+          type="button"
+          onClick={() => setShowSkillRequest(true)}
+          className="inline-flex items-center gap-1.5 rounded-[var(--radius-full)] border border-dashed border-border bg-card px-4 py-2 text-sm font-medium text-muted-foreground hover:text-foreground hover:border-foreground/30 transition-colors cursor-pointer"
+        >
           <svg width="14" height="14" viewBox="0 0 14 14" fill="none" className="shrink-0">
             <path d="M7 2v10M2 7h10" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" />
           </svg>
-          More skills coming soon
-        </span>
+          Request New Skills
+        </button>
       </div>
+
+      <LoginModal open={showAuth} onClose={handleAuthClose} />
+      <SkillRequestModal open={showSkillRequest} onClose={() => setShowSkillRequest(false)} />
     </div>
   );
 }

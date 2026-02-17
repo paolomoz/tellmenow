@@ -1,6 +1,7 @@
 import { Hono } from "hono";
 import { Env } from "../types";
 import { insertJob } from "../db/queries";
+import { getOptionalUser } from "../auth/middleware";
 
 const app = new Hono<{ Bindings: Env }>();
 
@@ -14,6 +15,7 @@ app.post("/query", async (c) => {
     return c.json({ detail: "skill_id is required" }, 400);
   }
 
+  const user = getOptionalUser(c);
   const jobId = crypto.randomUUID().replace(/-/g, "").slice(0, 12);
   const now = new Date().toISOString();
 
@@ -21,6 +23,7 @@ app.post("/query", async (c) => {
     id: jobId,
     query: body.query,
     skill_id: body.skill_id,
+    user_id: user?.id ?? null,
     created_at: now,
   });
 

@@ -4,7 +4,32 @@ export interface Env {
   AWS_REGION: string;
   ANTHROPIC_AWS_BEARER_TOKEN_BEDROCK: string;
   FRONTEND_URL?: string;
+  AUTH_SECRET: string;
+  GOOGLE_CLIENT_ID: string;
+  GOOGLE_CLIENT_SECRET: string;
+  GITHUB_CLIENT_ID: string;
+  GITHUB_CLIENT_SECRET: string;
 }
+
+export interface User {
+  id: string; // provider:providerAccountId
+  provider: string;
+  provider_account_id: string;
+  name: string | null;
+  email: string | null;
+  image: string | null;
+  created_at: string;
+}
+
+export type SessionUser = Pick<User, "id" | "name" | "email" | "image">;
+
+/** Hono app type with bindings and variables */
+export type AppEnv = {
+  Bindings: Env;
+  Variables: {
+    user?: SessionUser;
+  };
+};
 
 export type JobStatus = "queued" | "reasoning" | "generating" | "completed" | "failed";
 
@@ -17,6 +42,7 @@ export interface Job {
   html_report: string | null;
   report_title: string | null;
   error: string | null;
+  user_id: string | null;
   created_at: string;
 }
 

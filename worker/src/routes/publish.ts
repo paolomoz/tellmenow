@@ -1,6 +1,7 @@
 import { Hono } from "hono";
 import { Env } from "../types";
 import { getJob, insertPublishedPage, getPublishedPage } from "../db/queries";
+import { getOptionalUser } from "../auth/middleware";
 
 const app = new Hono<{ Bindings: Env }>();
 
@@ -18,13 +19,14 @@ app.post("/publish", async (c) => {
     return c.json({ detail: "Job has no HTML report to publish" }, 400);
   }
 
+  const user = getOptionalUser(c);
   const publishedId = crypto.randomUUID().replace(/-/g, "").slice(0, 10);
   const now = new Date().toISOString();
 
   await insertPublishedPage(c.env.DB, {
     id: publishedId,
     job_id: job.id,
-    user_id: null,
+    user_id: user?.id ?? null,
     title: job.report_title || job.query.slice(0, 80),
     html: job.html_report,
     skill_id: job.skill_id,
