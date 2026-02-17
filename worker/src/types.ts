@@ -1,4 +1,5 @@
 export interface Env {
+  ASSETS: Fetcher;
   DB: D1Database;
   ANTHROPIC_MODEL: string;
   AWS_REGION: string;
