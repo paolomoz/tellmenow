@@ -1,7 +1,9 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
+import { useQueryClient } from "@tanstack/react-query";
 import { ChatInput } from "@/components/chat/chat-input";
 import { useStartQuery, useSkills } from "@/lib/hooks/use-query";
+import { useSkillGeneration } from "@/lib/hooks/use-skill-generation";
 import { useAuthStore } from "@/lib/stores/auth-store";
 import { LoginModal } from "@/components/auth/login-modal";
 import { SkillRequestModal } from "@/components/skill-request/skill-request-modal";
@@ -9,6 +11,7 @@ import { Skill } from "@/types/job";
 
 export function HomeHero() {
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
   const startQuery = useStartQuery();
   const { data: skills } = useSkills();
   const [selectedSkill, setSelectedSkill] = useState<Skill | null>(null);
@@ -16,6 +19,16 @@ export function HomeHero() {
   const [showSkillRequest, setShowSkillRequest] = useState(false);
   const [pendingQuery, setPendingQuery] = useState<string | null>(null);
   const user = useAuthStore((s) => s.user);
+
+  const buildingSkillIds = useMemo(
+    () =>
+      (skills ?? [])
+        .filter((s) => s.status === "pending" || s.status === "generating")
+        .map((s) => s.id),
+    [skills],
+  );
+
+  useSkillGeneration(buildingSkillIds);
 
   const placeholderMap: Record<string, string> = {
     "site-estimator": "Enter a website or a brand name..",
@@ -56,6 +69,10 @@ export function HomeHero() {
     }
   };
 
+  const handleSkillSubmitted = () => {
+    queryClient.invalidateQueries({ queryKey: ["skills"] });
+  };
+
   const skillIcons: Record<string, React.ReactNode> = {
     "site-estimator": (
       <svg width="14" height="14" viewBox="0 0 14 14" fill="none" className="shrink-0">
@@ -86,30 +103,61 @@ export function HomeHero() {
 
       {/* Skill chips */}
       <div className="flex flex-wrap justify-center gap-2">
-        {skills?.map((skill) => (
-          <button
-            key={skill.id}
-            type="button"
-            onClick={() =>
-              setSelectedSkill(
-                selectedSkill?.id === skill.id ? null : skill
-              )
-            }
-            className={`inline-flex items-center gap-1.5 rounded-[var(--radius-full)] border px-4 py-2 text-sm font-medium transition-colors cursor-pointer ${
-              selectedSkill?.id === skill.id
-                ? "border-primary/30 bg-primary-light text-primary"
-                : "border-border bg-card text-foreground hover:bg-accent"
-            }`}
-          >
-            {skillIcons[skill.id] || (
-              <svg width="14" height="14" viewBox="0 0 14 14" fill="none" className="shrink-0">
-                <circle cx="7" cy="7" r="5" stroke="currentColor" strokeWidth="1.3" />
-                <path d="M7 5v4M5 7h4" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" />
-              </svg>
-            )}
-            {skill.name}
-          </button>
-        ))}
+        {skills?.map((skill) => {
+          const isBuilding = skill.status === "pending" || skill.status === "generating";
+
+          if (isBuilding) {
+            return (
+              <div
+                key={skill.id}
+                className="inline-flex items-center gap-1.5 rounded-[var(--radius-full)] border border-border bg-card px-4 py-2 text-sm font-medium text-muted-foreground animate-pulse"
+              >
+                <svg
+                  width="14"
+                  height="14"
+                  viewBox="0 0 14 14"
+                  fill="none"
+                  className="shrink-0 animate-spin"
+                >
+                  <circle
+                    cx="7"
+                    cy="7"
+                    r="5"
+                    stroke="currentColor"
+                    strokeWidth="1.3"
+                    strokeDasharray="20 10"
+                  />
+                </svg>
+                Building...
+              </div>
+            );
+          }
+
+          return (
+            <button
+              key={skill.id}
+              type="button"
+              onClick={() =>
+                setSelectedSkill(
+                  selectedSkill?.id === skill.id ? null : skill
+                )
+              }
+              className={`inline-flex items-center gap-1.5 rounded-[var(--radius-full)] border px-4 py-2 text-sm font-medium transition-colors cursor-pointer ${
+                selectedSkill?.id === skill.id
+                  ? "border-primary/30 bg-primary-light text-primary"
+                  : "border-border bg-card text-foreground hover:bg-accent"
+              }`}
+            >
+              {skillIcons[skill.id] || (
+                <svg width="14" height="14" viewBox="0 0 14 14" fill="none" className="shrink-0">
+                  <circle cx="7" cy="7" r="5" stroke="currentColor" strokeWidth="1.3" />
+                  <path d="M7 5v4M5 7h4" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" />
+                </svg>
+              )}
+              {skill.name}
+            </button>
+          );
+        })}
 
         {/* Request new skills */}
         <button
@@ -125,7 +173,11 @@ export function HomeHero() {
       </div>
 
       <LoginModal open={showAuth} onClose={handleAuthClose} />
-      <SkillRequestModal open={showSkillRequest} onClose={() => setShowSkillRequest(false)} />
+      <SkillRequestModal
+        open={showSkillRequest}
+        onClose={() => setShowSkillRequest(false)}
+        onSkillSubmitted={handleSkillSubmitted}
+      />
     </div>
   );
 }

@@ -1,6 +1,6 @@
 import { Hono } from "hono";
-import { Env } from "../types";
-import { insertSkillRequest } from "../db/queries";
+import { AppEnv } from "../types";
+import { insertGeneratedSkill } from "../db/queries";
 import { getOptionalUser } from "../auth/middleware";
 import { chatMultiTurn, ChatMessage } from "../llm/client";
 
@@ -26,7 +26,7 @@ After outputting the summary, ask the user if they'd like to submit it or refine
 
 const HAIKU_MODEL = "us.anthropic.claude-3-5-haiku-20241022-v1:0";
 
-const app = new Hono<{ Bindings: Env }>();
+const app = new Hono<AppEnv>();
 
 app.post("/skill-requests/chat", async (c) => {
   const body = await c.req.json<{
@@ -83,27 +83,38 @@ app.post("/skill-requests/chat", async (c) => {
 
 app.post("/skill-requests", async (c) => {
   const body = await c.req.json<{
+    name?: string;
     description?: string;
-    additional_context?: string;
+    input?: string;
+    output?: string;
+    chat_context?: string;
   }>();
 
-  if (!body.description || typeof body.description !== "string" || !body.description.trim()) {
-    return c.json({ detail: "description is required" }, 400);
+  if (!body.name || !body.description || !body.input || !body.output) {
+    return c.json({ detail: "name, description, input, and output are required" }, 400);
   }
 
   const user = getOptionalUser(c);
+  if (!user) {
+    return c.json({ detail: "Authentication required" }, 401);
+  }
+
   const id = crypto.randomUUID();
   const now = new Date().toISOString();
 
-  await insertSkillRequest(c.env.DB, {
+  await insertGeneratedSkill(c.env.DB, {
     id,
-    user_id: user?.id ?? null,
+    user_id: user.id,
+    name: body.name.trim(),
     description: body.description.trim(),
-    additional_context: body.additional_context?.trim() || null,
+    input_spec: body.input.trim(),
+    output_spec: body.output.trim(),
+    chat_context: body.chat_context?.trim() || null,
     created_at: now,
+    updated_at: now,
   });
 
-  return c.json({ id });
+  return c.json({ id, status: "pending" });
 });
 
 export default app;

@@ -2,6 +2,7 @@ export interface Skill {
   id: string;
   name: string;
   description: string;
+  status?: "pending" | "generating" | "ready";
 }
 
 export interface QueryRequest {

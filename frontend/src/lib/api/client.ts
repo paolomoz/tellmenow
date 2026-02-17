@@ -83,14 +83,17 @@ export async function chatSkillRequest(
 }
 
 export async function submitSkillRequest(
-  description: string,
-  additionalContext?: string,
-): Promise<{ id: string }> {
+  proposal: { name: string; description: string; input: string; output: string },
+  chatContext?: string,
+): Promise<{ id: string; status: string }> {
   return fetchJson("/skill-requests", {
     method: "POST",
     body: JSON.stringify({
-      description,
-      additional_context: additionalContext,
+      name: proposal.name,
+      description: proposal.description,
+      input: proposal.input,
+      output: proposal.output,
+      chat_context: chatContext,
     }),
   });
 }

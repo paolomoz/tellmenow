@@ -17,6 +17,7 @@ interface SkillSummary {
 interface SkillRequestModalProps {
   open: boolean;
   onClose: () => void;
+  onSkillSubmitted?: (skillId: string) => void;
 }
 
 const INITIAL_MESSAGE: Message = {
@@ -24,7 +25,7 @@ const INITIAL_MESSAGE: Message = {
   text: "Hey! I'd love to help you shape a new skill idea. What kind of automated research or analysis would you find useful?",
 };
 
-export function SkillRequestModal({ open, onClose }: SkillRequestModalProps) {
+export function SkillRequestModal({ open, onClose, onSkillSubmitted }: SkillRequestModalProps) {
   const [messages, setMessages] = useState<Message[]>([INITIAL_MESSAGE]);
   const [input, setInput] = useState("");
   const [thinking, setThinking] = useState(false);
@@ -102,14 +103,16 @@ export function SkillRequestModal({ open, onClose }: SkillRequestModalProps) {
     if (!summary) return;
     setSubmitting(true);
     try {
-      const description = `${summary.name}: ${summary.description}`;
-      const context = `Input: ${summary.input}\nOutput: ${summary.output}`;
-      await submitSkillRequest(description, context);
+      const chatContext = buildApiMessages(messages)
+        .map((m) => `${m.role}: ${m.content}`)
+        .join("\n\n");
+      const result = await submitSkillRequest(summary, chatContext);
       setSubmitted(true);
       setMessages((prev) => [
         ...prev,
-        { from: "system", text: "Submitted! We'll review your idea and keep you posted." },
+        { from: "system", text: "Building your skill now..." },
       ]);
+      onSkillSubmitted?.(result.id);
     } catch {
       setMessages((prev) => [
         ...prev,

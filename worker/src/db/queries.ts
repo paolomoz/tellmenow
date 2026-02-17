@@ -1,4 +1,4 @@
-import { Job, JobStatus, PublishedPage } from "../types";
+import { Job, JobStatus, PublishedPage, GeneratedSkill, GeneratedSkillStatus } from "../types";
 
 export async function insertJob(
   db: D1Database,
@@ -109,6 +109,96 @@ export async function insertSkillRequest(
       request.created_at,
     )
     .run();
+}
+
+// ── Generated Skills ────────────────────────────────
+
+export async function insertGeneratedSkill(
+  db: D1Database,
+  skill: {
+    id: string;
+    user_id: string;
+    name: string;
+    description: string;
+    input_spec: string;
+    output_spec: string;
+    chat_context: string | null;
+    created_at: string;
+    updated_at: string;
+  },
+): Promise<void> {
+  await db
+    .prepare(
+      "INSERT INTO generated_skills (id, user_id, name, description, input_spec, output_spec, status, chat_context, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, 'pending', ?, ?, ?)",
+    )
+    .bind(
+      skill.id,
+      skill.user_id,
+      skill.name,
+      skill.description,
+      skill.input_spec,
+      skill.output_spec,
+      skill.chat_context,
+      skill.created_at,
+      skill.updated_at,
+    )
+    .run();
+}
+
+export async function getGeneratedSkill(
+  db: D1Database,
+  id: string,
+): Promise<GeneratedSkill | null> {
+  const row = await db
+    .prepare("SELECT * FROM generated_skills WHERE id = ?")
+    .bind(id)
+    .first();
+  return row ? (row as unknown as GeneratedSkill) : null;
+}
+
+export async function updateGeneratedSkill(
+  db: D1Database,
+  id: string,
+  fields: Partial<Pick<GeneratedSkill, "status" | "content" | "refs_json" | "error" | "updated_at">>,
+): Promise<void> {
+  const sets: string[] = [];
+  const values: unknown[] = [];
+  for (const [key, value] of Object.entries(fields)) {
+    sets.push(`${key} = ?`);
+    values.push(value);
+  }
+  if (sets.length === 0) return;
+  values.push(id);
+  await db
+    .prepare(`UPDATE generated_skills SET ${sets.join(", ")} WHERE id = ?`)
+    .bind(...values)
+    .run();
+}
+
+/** Atomically claim a pending generated skill. Returns true if claimed. */
+export async function claimGeneratedSkill(
+  db: D1Database,
+  id: string,
+  newStatus: GeneratedSkillStatus,
+): Promise<boolean> {
+  const result = await db
+    .prepare("UPDATE generated_skills SET status = ? WHERE id = ? AND status = 'pending'")
+    .bind(newStatus, id)
+    .run();
+  return (result.meta?.changes ?? 0) > 0;
+}
+
+export async function getGeneratedSkillsByUser(
+  db: D1Database,
+  userId: string,
+): Promise<GeneratedSkill[]> {
+  const rows = await db
+    .prepare(
+      "SELECT * FROM generated_skills WHERE user_id = ? ORDER BY created_at DESC",
+    )
+    .bind(userId)
+    .all();
+  return (rows.results ?? []) as unknown as GeneratedSkill[];
 }
 
 export async function getJobsByUser(

@@ -1,5 +1,5 @@
 import { Env, Job, STEP_PROGRESS, STEP_MESSAGES } from "../types";
-import { getSkill } from "../skills";
+import { getSkillResolved } from "../skills";
 import { chat } from "../llm/client";
 import { updateJob } from "../db/queries";
 import {
@@ -18,7 +18,7 @@ export async function runPipelineSSE(
   send: SendFn,
 ): Promise<void> {
   try {
-    const skill = getSkill(job.skill_id);
+    const skill = await getSkillResolved(job.skill_id, db);
     if (!skill) {
       await updateJob(db, job.id, { status: "failed", error: `Skill not found: ${job.skill_id}` });
       send("status", {

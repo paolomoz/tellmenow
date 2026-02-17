@@ -54,6 +54,24 @@ export interface Skill {
   references: Record<string, string>;
 }
 
+export type GeneratedSkillStatus = "pending" | "generating" | "ready" | "failed";
+
+export interface GeneratedSkill {
+  id: string;
+  user_id: string;
+  name: string;
+  description: string;
+  input_spec: string;
+  output_spec: string;
+  status: GeneratedSkillStatus;
+  content: string | null;
+  refs_json: string | null;
+  error: string | null;
+  chat_context: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
 export interface PublishedPage {
   id: string;
   job_id: string;
