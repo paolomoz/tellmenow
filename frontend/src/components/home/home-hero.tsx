@@ -1,13 +1,11 @@
-"use client";
-
 import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { useNavigate } from "react-router-dom";
 import { ChatInput } from "@/components/chat/chat-input";
 import { useStartQuery, useSkills } from "@/lib/hooks/use-query";
 import { Skill } from "@/types/job";
 
 export function HomeHero() {
-  const router = useRouter();
+  const navigate = useNavigate();
   const startQuery = useStartQuery();
   const { data: skills } = useSkills();
   const [selectedSkill, setSelectedSkill] = useState<Skill | null>(null);
@@ -20,7 +18,7 @@ export function HomeHero() {
         query: text,
         skill_id: selectedSkill.id,
       });
-      router.push(`/task/${result.job_id}`);
+      navigate(`/task/${result.job_id}`);
     } catch {
       // error handled by mutation state
     }

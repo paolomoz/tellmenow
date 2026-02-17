@@ -1,5 +1,3 @@
-"use client";
-
 import { TopBar } from "./top-bar";
 
 export function MainContent({ children }: { children: React.ReactNode }) {

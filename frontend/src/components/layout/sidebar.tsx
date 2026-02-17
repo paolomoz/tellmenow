@@ -1,16 +1,14 @@
-"use client";
-
-import { useRouter, usePathname } from "next/navigation";
+import { useNavigate, useLocation } from "react-router-dom";
 import { useUIStore } from "@/lib/stores/ui-store";
 import { cn } from "@/lib/utils";
 
 export function Sidebar() {
-  const router = useRouter();
-  const pathname = usePathname();
+  const navigate = useNavigate();
+  const { pathname } = useLocation();
   const { sidebarOpen, toggleSidebar } = useUIStore();
 
-  const navigate = (path: string) => {
-    router.push(path);
+  const nav = (path: string) => {
+    navigate(path);
     if (window.innerWidth < 1024) toggleSidebar();
   };
 
@@ -34,7 +32,7 @@ export function Sidebar() {
         <div className="flex h-full flex-col">
           <div className="flex items-center justify-between border-b border-border px-4 py-4">
             <button
-              onClick={() => navigate("/")}
+              onClick={() => nav("/")}
               className="flex items-center gap-2 hover:opacity-80 transition-opacity cursor-pointer"
             >
               <div className="h-8 w-8 rounded-full bg-primary flex items-center justify-center">
@@ -57,7 +55,7 @@ export function Sidebar() {
 
           <div className="p-3">
             <button
-              onClick={() => navigate("/")}
+              onClick={() => nav("/")}
               className="flex w-full items-center gap-2 rounded-[var(--radius-md)] px-3 py-2.5 text-sm font-medium hover:bg-accent transition-colors cursor-pointer"
             >
               <svg width="16" height="16" viewBox="0 0 16 16" fill="none" className="shrink-0">
@@ -76,7 +74,7 @@ export function Sidebar() {
                 icon="home"
                 label="Home"
                 active={pathname === "/"}
-                onClick={() => navigate("/")}
+                onClick={() => nav("/")}
               />
             </div>
           </nav>

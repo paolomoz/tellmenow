@@ -1,5 +1,3 @@
-"use client";
-
 import { useState } from "react";
 import { useTaskSSE } from "@/lib/hooks/use-task-sse";
 import { useJobStatus } from "@/lib/hooks/use-query";

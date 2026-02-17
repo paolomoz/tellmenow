@@ -1,0 +1,13 @@
+name = "tellmenow-worker"
+main = "src/index.ts"
+compatibility_date = "2025-02-14"
+
+[vars]
+ANTHROPIC_MODEL = "us.anthropic.claude-opus-4-5-20250514"
+AWS_REGION = "us-east-1"
+
+[[d1_databases]]
+binding = "DB"
+database_name = "tellmenow-db"
+database_id = "local"
+migrations_dir = "migrations"

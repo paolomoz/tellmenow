@@ -1,5 +1,3 @@
-"use client";
-
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { startQuery, fetchSkills, fetchJobStatus } from "@/lib/api/client";
 import { QueryRequest } from "@/types/job";

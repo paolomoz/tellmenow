@@ -1,5 +1,3 @@
-"use client";
-
 import { useUIStore } from "@/lib/stores/ui-store";
 
 export function TopBar() {
