@@ -40,6 +40,7 @@ export function App() {
             <MainContent>
               <Routes>
                 <Route path="/" element={<Home />} />
+                <Route path="/skill/:skillId" element={<Home />} />
                 <Route path="/task/:id" element={<Task />} />
                 <Route path="/p/:id" element={<Published />} />
               </Routes>

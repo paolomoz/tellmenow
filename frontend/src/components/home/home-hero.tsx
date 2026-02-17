@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { useQueryClient } from "@tanstack/react-query";
 import { ChatInput } from "@/components/chat/chat-input";
@@ -9,12 +9,23 @@ import { LoginModal } from "@/components/auth/login-modal";
 import { SkillRequestModal } from "@/components/skill-request/skill-request-modal";
 import { Skill } from "@/types/job";
 
-export function HomeHero() {
+interface HomeHeroProps {
+  skillId?: string;
+}
+
+export function HomeHero({ skillId }: HomeHeroProps) {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const startQuery = useStartQuery();
   const { data: skills } = useSkills();
   const [selectedSkill, setSelectedSkill] = useState<Skill | null>(null);
+
+  // Auto-select skill from URL param once skills are loaded
+  useEffect(() => {
+    if (!skillId || !skills) return;
+    const match = skills.find((s) => s.id === skillId);
+    setSelectedSkill(match ?? null);
+  }, [skillId, skills]);
   const [showAuth, setShowAuth] = useState(false);
   const [showSkillRequest, setShowSkillRequest] = useState(false);
   const [pendingQuery, setPendingQuery] = useState<string | null>(null);
@@ -137,11 +148,15 @@ export function HomeHero() {
             <button
               key={skill.id}
               type="button"
-              onClick={() =>
-                setSelectedSkill(
-                  selectedSkill?.id === skill.id ? null : skill
-                )
-              }
+              onClick={() => {
+                if (selectedSkill?.id === skill.id) {
+                  setSelectedSkill(null);
+                  navigate("/", { replace: true });
+                } else {
+                  setSelectedSkill(skill);
+                  navigate(`/skill/${skill.id}`, { replace: true });
+                }
+              }}
               className={`inline-flex items-center gap-1.5 rounded-[var(--radius-full)] border px-4 py-2 text-sm font-medium transition-colors cursor-pointer ${
                 selectedSkill?.id === skill.id
                   ? "border-primary/30 bg-primary-light text-primary"
@@ -171,6 +186,15 @@ export function HomeHero() {
           Request New Skills
         </button>
       </div>
+
+      {selectedSkill?.description && (
+        <p
+          key={selectedSkill.id}
+          className="text-center text-sm text-muted-foreground max-w-md mx-auto leading-relaxed fade-in"
+        >
+          {selectedSkill.description}
+        </p>
+      )}
 
       <LoginModal open={showAuth} onClose={handleAuthClose} />
       <SkillRequestModal

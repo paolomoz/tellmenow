@@ -1,6 +1,9 @@
+import { useParams } from "react-router-dom";
 import { HomeHero } from "@/components/home/home-hero";
 
 export default function Home() {
+  const { skillId } = useParams<{ skillId: string }>();
+
   return (
     <div className="flex flex-col items-center min-h-full px-4 pt-[18vh] pb-12">
       <div className="w-full max-w-2xl space-y-6 mb-24">
@@ -13,7 +16,7 @@ export default function Home() {
           </p>
         </div>
 
-        <HomeHero />
+        <HomeHero skillId={skillId} />
       </div>
     </div>
   );
