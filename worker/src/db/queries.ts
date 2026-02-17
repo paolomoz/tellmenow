@@ -201,6 +201,51 @@ export async function getGeneratedSkillsByUser(
   return (rows.results ?? []) as unknown as GeneratedSkill[];
 }
 
+// ── Shareable Skills ────────────────────────────────
+
+export async function updateShareStatus(
+  db: D1Database,
+  id: string,
+  shareStatus: string | null,
+): Promise<void> {
+  const now = new Date().toISOString();
+  await db
+    .prepare("UPDATE generated_skills SET share_status = ?, updated_at = ? WHERE id = ?")
+    .bind(shareStatus, now, id)
+    .run();
+}
+
+export async function getPendingSharedSkills(
+  db: D1Database,
+): Promise<(GeneratedSkill & { creator_name: string | null; creator_email: string | null })[]> {
+  const rows = await db
+    .prepare(
+      `SELECT gs.*, u.name AS creator_name, u.email AS creator_email
+       FROM generated_skills gs
+       JOIN users u ON gs.user_id = u.id
+       WHERE gs.share_status = 'pending_review'
+       ORDER BY gs.updated_at DESC`,
+    )
+    .all();
+  return (rows.results ?? []) as unknown as (GeneratedSkill & {
+    creator_name: string | null;
+    creator_email: string | null;
+  })[];
+}
+
+export async function getApprovedSharedSkills(
+  db: D1Database,
+): Promise<GeneratedSkill[]> {
+  const rows = await db
+    .prepare(
+      "SELECT * FROM generated_skills WHERE share_status = 'approved' AND status = 'ready' ORDER BY updated_at DESC",
+    )
+    .all();
+  return (rows.results ?? []) as unknown as GeneratedSkill[];
+}
+
+// ── History ─────────────────────────────────────────
+
 export async function getJobsByUser(
   db: D1Database,
   userId: string,

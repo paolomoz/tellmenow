@@ -1,7 +1,7 @@
 import { Hono } from "hono";
 import { AppEnv } from "../types";
-import { listSkills, listSkillsForUser } from "../skills";
-import { getGeneratedSkill, claimGeneratedSkill } from "../db/queries";
+import { listSkillsForUser, listSkillsPublic } from "../skills";
+import { getGeneratedSkill, claimGeneratedSkill, updateShareStatus } from "../db/queries";
 import { generateSkill } from "../engine/skill-generator";
 import { getOptionalUser } from "../auth/middleware";
 
@@ -18,16 +18,38 @@ app.get("/skills", async (c) => {
         name: s.name,
         description: s.description,
         ...(s.status ? { status: s.status } : {}),
+        ...("share_status" in s && s.share_status != null ? { share_status: s.share_status } : {}),
+        ...("shared" in s && s.shared ? { shared: true } : {}),
       })),
     );
   }
 
-  const skills = listSkills().map((s) => ({
-    id: s.id,
-    name: s.name,
-    description: s.description,
-  }));
-  return c.json(skills);
+  const skills = await listSkillsPublic(c.env.DB);
+  return c.json(
+    skills.map((s) => ({
+      id: s.id,
+      name: s.name,
+      description: s.description,
+      ...("shared" in s && s.shared ? { shared: true } : {}),
+    })),
+  );
+});
+
+app.post("/skills/:id/share", async (c) => {
+  const user = getOptionalUser(c);
+  if (!user) return c.json({ detail: "Authentication required" }, 401);
+
+  const id = c.req.param("id");
+  const skill = await getGeneratedSkill(c.env.DB, id);
+  if (!skill) return c.json({ detail: "Skill not found" }, 404);
+  if (skill.user_id !== user.id) return c.json({ detail: "Not your skill" }, 403);
+  if (skill.status !== "ready") return c.json({ detail: "Skill is not ready" }, 400);
+  if (skill.share_status === "pending_review" || skill.share_status === "approved") {
+    return c.json({ detail: "Skill is already shared or pending review" }, 400);
+  }
+
+  await updateShareStatus(c.env.DB, id, "pending_review");
+  return c.json({ ok: true, share_status: "pending_review" });
 });
 
 app.get("/skills/:id/status", async (c) => {

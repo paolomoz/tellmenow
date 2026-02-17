@@ -11,6 +11,7 @@ import publish from "./routes/publish";
 import auth from "./routes/auth";
 import history from "./routes/history";
 import skillRequests from "./routes/skill-requests";
+import admin from "./routes/admin";
 
 const app = new Hono<AppEnv>();
 
@@ -36,6 +37,7 @@ api.route("/", publish);
 api.route("/", auth);
 api.route("/", history);
 api.route("/", skillRequests);
+api.route("/", admin);
 
 // SPA fallback: serve static assets or index.html for non-API routes
 app.get("*", async (c) => {

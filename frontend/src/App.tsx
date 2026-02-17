@@ -7,6 +7,7 @@ import { useAuthStore } from "@/lib/stores/auth-store";
 import Home from "@/pages/Home";
 import Task from "@/pages/Task";
 import Published from "@/pages/Published";
+import Admin from "@/pages/Admin";
 
 function AuthInit({ children }: { children: React.ReactNode }) {
   const checkSession = useAuthStore((s) => s.checkSession);
@@ -43,6 +44,7 @@ export function App() {
                 <Route path="/skill/:skillId" element={<Home />} />
                 <Route path="/task/:id" element={<Task />} />
                 <Route path="/p/:id" element={<Published />} />
+                <Route path="/admin" element={<Admin />} />
               </Routes>
             </MainContent>
           </div>

@@ -1,5 +1,5 @@
 import { Skill, GeneratedSkill } from "../types";
-import { getGeneratedSkill, getGeneratedSkillsByUser } from "../db/queries";
+import { getGeneratedSkill, getGeneratedSkillsByUser, getApprovedSharedSkills } from "../db/queries";
 import { siteEstimatorSkill } from "./data/site-overviewer/skill";
 
 const skills: Record<string, Skill> = {
@@ -50,19 +50,24 @@ export async function getSkillResolved(
   return undefined;
 }
 
-/** Merge static skills + user's generated skills (including pending/generating). */
+/** Merge static skills + user's generated skills (including pending/generating) + approved shared skills. */
 export async function listSkillsForUser(
   db: D1Database,
   userId: string,
-): Promise<(Skill & { status?: string })[]> {
+): Promise<(Skill & { status?: string; share_status?: string | null; shared?: boolean })[]> {
   const staticList = listSkills().map((s) => ({ ...s }));
-  const generated = await getGeneratedSkillsByUser(db, userId);
+  const [generated, approved] = await Promise.all([
+    getGeneratedSkillsByUser(db, userId),
+    getApprovedSharedSkills(db),
+  ]);
 
-  const merged: (Skill & { status?: string })[] = [...staticList];
+  const seenIds = new Set<string>(staticList.map((s) => s.id));
+  const merged: (Skill & { status?: string; share_status?: string | null; shared?: boolean })[] = [...staticList];
 
   for (const gs of generated) {
+    seenIds.add(gs.id);
     if (gs.status === "ready" && gs.content) {
-      merged.push(toSkill(gs));
+      merged.push({ ...toSkill(gs), share_status: gs.share_status });
     } else if (gs.status === "pending" || gs.status === "generating") {
       merged.push({
         id: gs.id,
@@ -74,6 +79,34 @@ export async function listSkillsForUser(
       });
     }
     // skip failed skills
+  }
+
+  // Add approved shared skills from other users (deduped)
+  for (const gs of approved) {
+    if (!seenIds.has(gs.id)) {
+      seenIds.add(gs.id);
+      merged.push({ ...toSkill(gs), shared: true });
+    }
+  }
+
+  return merged;
+}
+
+/** Static skills + approved shared skills (for unauthenticated users). */
+export async function listSkillsPublic(
+  db: D1Database,
+): Promise<(Skill & { shared?: boolean })[]> {
+  const staticList = listSkills().map((s) => ({ ...s }));
+  const approved = await getApprovedSharedSkills(db);
+
+  const seenIds = new Set<string>(staticList.map((s) => s.id));
+  const merged: (Skill & { shared?: boolean })[] = [...staticList];
+
+  for (const gs of approved) {
+    if (!seenIds.has(gs.id)) {
+      seenIds.add(gs.id);
+      merged.push({ ...toSkill(gs), shared: true });
+    }
   }
 
   return merged;

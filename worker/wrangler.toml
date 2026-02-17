@@ -10,6 +10,7 @@ not_found_handling = "single-page-application"
 [vars]
 ANTHROPIC_MODEL = "global.anthropic.claude-opus-4-6-v1"
 AWS_REGION = "us-east-1"
+ADMIN_EMAILS = "paolo@dfrancesco.dev"
 
 [[d1_databases]]
 binding = "DB"

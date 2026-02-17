@@ -10,6 +10,7 @@ export interface Env {
   GOOGLE_CLIENT_SECRET: string;
   GITHUB_CLIENT_ID: string;
   GITHUB_CLIENT_SECRET: string;
+  ADMIN_EMAILS: string;
 }
 
 export interface User {
@@ -69,6 +70,7 @@ export interface GeneratedSkill {
   refs_json: string | null;
   error: string | null;
   chat_context: string | null;
+  share_status: string | null;
   created_at: string;
   updated_at: string;
 }

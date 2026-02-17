@@ -97,3 +97,32 @@ export async function submitSkillRequest(
     }),
   });
 }
+
+// ── Shareable Skills ───────────────────────────────
+
+export async function shareSkill(id: string): Promise<{ ok: boolean }> {
+  return fetchJson(`/skills/${id}/share`, { method: "POST" });
+}
+
+// ── Admin ──────────────────────────────────────────
+
+export interface PendingSkill {
+  id: string;
+  name: string;
+  description: string;
+  creator_name: string | null;
+  creator_email: string | null;
+  created_at: string;
+}
+
+export async function fetchPendingSkills(): Promise<PendingSkill[]> {
+  return fetchJson("/admin/pending-skills");
+}
+
+export async function approveSkill(id: string): Promise<{ ok: boolean }> {
+  return fetchJson(`/admin/skills/${id}/approve`, { method: "POST" });
+}
+
+export async function rejectSkill(id: string): Promise<{ ok: boolean }> {
+  return fetchJson(`/admin/skills/${id}/reject`, { method: "POST" });
+}

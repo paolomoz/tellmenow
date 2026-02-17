@@ -140,6 +140,26 @@ export function Sidebar() {
             </button>
           </div>
 
+          {user?.is_admin && (
+            <div className="px-3 pb-1">
+              <button
+                onClick={() => nav("/admin")}
+                className={cn(
+                  "flex w-full items-center gap-2 rounded-[var(--radius-md)] px-3 py-2 text-sm transition-colors cursor-pointer",
+                  pathname === "/admin"
+                    ? "bg-accent font-medium text-foreground"
+                    : "text-muted hover:bg-accent hover:text-foreground",
+                )}
+              >
+                <svg width="16" height="16" viewBox="0 0 16 16" fill="none" className="shrink-0">
+                  <path d="M8 1.5l1.3 2.6 2.9.4-2.1 2 .5 2.9L8 7.9 5.4 9.4l.5-2.9-2.1-2 2.9-.4L8 1.5z" stroke="currentColor" strokeWidth="1.3" strokeLinejoin="round" />
+                  <path d="M3 12h10M5 14h6" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" />
+                </svg>
+                Admin
+              </button>
+            </div>
+          )}
+
           <nav className="flex-1 overflow-y-auto px-3 py-2">
             {user && history.length > 0 ? (
               <>

@@ -3,6 +3,8 @@ export interface Skill {
   name: string;
   description: string;
   status?: "pending" | "generating" | "ready";
+  shared?: boolean;
+  share_status?: string | null;
 }
 
 export interface QueryRequest {
@@ -48,6 +50,7 @@ export interface SessionUser {
   name: string | null;
   email: string | null;
   image: string | null;
+  is_admin?: boolean;
 }
 
 export interface HistoryJob {

@@ -9,6 +9,7 @@ import {
   exchangeGithubCode,
   OAuthUserInfo,
 } from "../auth/oauth";
+import { isAdminEmail } from "../auth/admin";
 
 const app = new Hono<AppEnv>();
 
@@ -134,12 +135,14 @@ app.get("/auth/session", async (c) => {
     return c.json({ user: null });
   }
 
+  const email = payload.email || null;
   return c.json({
     user: {
       id: payload.sub,
       name: payload.name || null,
-      email: payload.email || null,
+      email,
       image: payload.image || null,
+      is_admin: isAdminEmail(email, c.env.ADMIN_EMAILS),
     },
   });
 });
