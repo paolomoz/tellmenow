@@ -29,7 +29,27 @@ export function HomeHero({ skillId }: HomeHeroProps) {
   const [showAuth, setShowAuth] = useState(false);
   const [showSkillRequest, setShowSkillRequest] = useState(false);
   const [pendingQuery, setPendingQuery] = useState<string | null>(null);
+  const [restoredQuery, setRestoredQuery] = useState<string | undefined>(undefined);
   const user = useAuthStore((s) => s.user);
+
+  // Restore pending query after OAuth redirect
+  useEffect(() => {
+    if (!user || !skills) return;
+    const saved = sessionStorage.getItem("tmn_pending");
+    if (!saved) return;
+    sessionStorage.removeItem("tmn_pending");
+    try {
+      const { skillId: savedSkillId, query } = JSON.parse(saved);
+      const match = skills.find((s) => s.id === savedSkillId);
+      if (match && query) {
+        setSelectedSkill(match);
+        navigate(`/skill/${match.id}`, { replace: true });
+        setRestoredQuery(query);
+      }
+    } catch {
+      // ignore malformed data
+    }
+  }, [user, skills]);
 
   const buildingSkillIds = useMemo(
     () =>
@@ -64,6 +84,10 @@ export function HomeHero({ skillId }: HomeHeroProps) {
 
     if (!user) {
       setPendingQuery(text);
+      sessionStorage.setItem(
+        "tmn_pending",
+        JSON.stringify({ skillId: selectedSkill.id, query: text }),
+      );
       setShowAuth(true);
       return;
     }
@@ -97,6 +121,7 @@ export function HomeHero({ skillId }: HomeHeroProps) {
   return (
     <div className="space-y-4">
       <ChatInput
+        key={restoredQuery ?? "default"}
         onSubmit={handleSubmit}
         placeholder={
           selectedSkill
@@ -104,6 +129,7 @@ export function HomeHero({ skillId }: HomeHeroProps) {
             : "Select a skill below, then ask your question..."
         }
         disabled={!selectedSkill || startQuery.isPending}
+        defaultValue={restoredQuery}
       />
 
       {startQuery.isError && (
