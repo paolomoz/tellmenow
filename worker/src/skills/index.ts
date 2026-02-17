@@ -1,6 +1,6 @@
 import { Skill, GeneratedSkill } from "../types";
 import { getGeneratedSkill, getGeneratedSkillsByUser } from "../db/queries";
-import { siteEstimatorSkill } from "./data/site-estimator/skill";
+import { siteEstimatorSkill } from "./data/site-overviewer/skill";
 
 const skills: Record<string, Skill> = {
   [siteEstimatorSkill.id]: siteEstimatorSkill,

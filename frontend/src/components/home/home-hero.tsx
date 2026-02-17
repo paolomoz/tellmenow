@@ -42,7 +42,7 @@ export function HomeHero({ skillId }: HomeHeroProps) {
   useSkillGeneration(buildingSkillIds);
 
   const placeholderMap: Record<string, string> = {
-    "site-estimator": "Enter a website or a brand name..",
+    "site-overviewer": "Enter a website or a brand name..",
   };
   const defaultPlaceholder = "Enter a website or a brand name..";
 
@@ -85,7 +85,7 @@ export function HomeHero({ skillId }: HomeHeroProps) {
   };
 
   const skillIcons: Record<string, React.ReactNode> = {
-    "site-estimator": (
+    "site-overviewer": (
       <svg width="14" height="14" viewBox="0 0 14 14" fill="none" className="shrink-0">
         <rect x="1" y="2" width="12" height="10" rx="2" stroke="currentColor" strokeWidth="1.3" />
         <path d="M1 5h12" stroke="currentColor" strokeWidth="1.3" />
