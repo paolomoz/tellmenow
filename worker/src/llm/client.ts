@@ -6,10 +6,24 @@ interface ChatOptions {
   temperature?: number;
 }
 
+export interface ChatMessage {
+  role: "user" | "assistant";
+  content: string;
+}
+
 export async function chat(
   env: Env,
   system: string,
   userMessage: string,
+  options: ChatOptions = {},
+): Promise<string> {
+  return chatMultiTurn(env, system, [{ role: "user", content: userMessage }], options);
+}
+
+export async function chatMultiTurn(
+  env: Env,
+  system: string,
+  messages: ChatMessage[],
   options: ChatOptions = {},
 ): Promise<string> {
   const model = options.model || env.ANTHROPIC_MODEL;
@@ -24,7 +38,7 @@ export async function chat(
     max_tokens: maxTokens,
     temperature,
     system,
-    messages: [{ role: "user", content: userMessage }],
+    messages,
   };
 
   let lastError: Error | null = null;

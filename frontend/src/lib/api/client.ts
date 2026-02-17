@@ -70,6 +70,18 @@ export async function fetchHistory(limit = 50, offset = 0): Promise<{ jobs: Hist
 
 // ── Skill Requests ──────────────────────────────────
 
+export async function chatSkillRequest(
+  messages: { role: string; content: string }[],
+): Promise<{
+  text: string;
+  summary: { name: string; description: string; input: string; output: string } | null;
+}> {
+  return fetchJson("/skill-requests/chat", {
+    method: "POST",
+    body: JSON.stringify({ messages }),
+  });
+}
+
 export async function submitSkillRequest(
   description: string,
   additionalContext?: string,
