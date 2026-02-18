@@ -31,12 +31,16 @@ The user will provide one or more of the following:
 For each discovered domain:
 
 1. **Fetch sitemap**: Try these URLs in order:
-   - \`/sitemap.xml\`
+   - \`/sitemap.xml\` (follow any redirects — e.g. WordPress often redirects to \`/wp-sitemap.xml\`)
    - \`/sitemap_index.xml\`
    - \`/robots.txt\` (look for Sitemap: directives)
    - \`/sitemap/\` or \`/sitemap.html\`
-2. **Count sitemap URLs**: Record the raw count per domain
-3. **If no sitemap exists**: Note this and proceed to manual sampling in Phase 3
+2. **Handle sitemap index files**: The fetched sitemap may be a **sitemap index** (contains \`<sitemapindex>\` with \`<sitemap><loc>\` entries pointing to child sitemaps) rather than a regular sitemap with page URLs. If so:
+   - Fetch **each child sitemap** listed in the index (e.g. \`/wp-sitemap-posts-page-1.xml\`, \`/wp-sitemap-posts-post-1.xml\`, \`/wp-sitemap-taxonomies-category-1.xml\`, etc.)
+   - Count the \`<url>\` entries in each child sitemap
+   - Sum all URLs across all child sitemaps for the total count
+3. **Count sitemap URLs**: Record the raw count per domain. This must be the total from all child sitemaps, not just the number of sitemaps in the index.
+4. **If no sitemap exists**: Note this and proceed to manual sampling in Phase 3
 
 ### Phase 3 — Content Sampling
 
@@ -78,7 +82,7 @@ Generate the structured output following the format in the Output Format referen
 
 Use these approaches in priority order:
 
-1. **Sitemap fetching** — Most reliable when available. Fetch and count URLs from XML sitemaps.
+1. **Sitemap fetching** — Most reliable when available. Fetch and count URLs from XML sitemaps. **Always follow redirects** and recursively resolve sitemap index files to their child sitemaps before counting.
 2. **Web search with site: operator** — Search \`site:example.com\` to gauge indexed page counts and discover subdomains/paths.
 3. **Navigation crawling** — Follow the main menu structure to map the information architecture and estimate depth.
 4. **Archive/pagination analysis** — Check blog/news archives for date ranges and pagination to estimate article counts (e.g., 10 years of press releases at ~20/year = ~200 pages).
