@@ -176,45 +176,44 @@ export function HomeHero({ skillId }: HomeHeroProps) {
             !skill.shared &&
             skill.status !== "pending" &&
             skill.status !== "generating" &&
-            (skill.share_status === null || skill.share_status === undefined || skill.share_status === "rejected");
+            (!skill.share_status || skill.share_status === "rejected");
           const isPendingReview = skill.share_status === "pending_review";
 
           return (
-            <div key={skill.id} className="inline-flex items-center gap-0">
-              <button
-                type="button"
-                onClick={() => {
-                  if (selectedSkill?.id === skill.id) {
-                    setSelectedSkill(null);
-                    navigate("/", { replace: true });
-                  } else {
-                    setSelectedSkill(skill);
-                    navigate(`/skill/${skill.id}`, { replace: true });
-                  }
-                }}
-                className={`inline-flex items-center gap-1.5 rounded-[var(--radius-full)] border px-4 py-2 text-sm font-medium transition-colors cursor-pointer ${
-                  selectedSkill?.id === skill.id
-                    ? "border-primary/30 bg-primary-light text-primary"
-                    : "border-border bg-card text-foreground hover:bg-accent"
-                }`}
-              >
-                {skillIcons[skill.id] || (
-                  <svg width="14" height="14" viewBox="0 0 14 14" fill="none" className="shrink-0">
-                    <circle cx="7" cy="7" r="5" stroke="currentColor" strokeWidth="1.3" />
-                    <path d="M7 5v4M5 7h4" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" />
-                  </svg>
-                )}
-                {skill.name}
-                {isPendingReview && (
-                  <span className="text-[10px] text-muted-foreground ml-1">(pending review)</span>
-                )}
-                {skill.shared && (
-                  <span className="text-[10px] text-muted-foreground ml-1">(shared)</span>
-                )}
-              </button>
+            <button
+              key={skill.id}
+              type="button"
+              onClick={() => {
+                if (selectedSkill?.id === skill.id) {
+                  setSelectedSkill(null);
+                  navigate("/", { replace: true });
+                } else {
+                  setSelectedSkill(skill);
+                  navigate(`/skill/${skill.id}`, { replace: true });
+                }
+              }}
+              className={`inline-flex items-center gap-1.5 rounded-[var(--radius-full)] border px-4 py-2 text-sm font-medium transition-colors cursor-pointer ${
+                selectedSkill?.id === skill.id
+                  ? "border-primary/30 bg-primary-light text-primary"
+                  : "border-border bg-card text-foreground hover:bg-accent"
+              }`}
+            >
+              {skillIcons[skill.id] || (
+                <svg width="14" height="14" viewBox="0 0 14 14" fill="none" className="shrink-0">
+                  <circle cx="7" cy="7" r="5" stroke="currentColor" strokeWidth="1.3" />
+                  <path d="M7 5v4M5 7h4" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" />
+                </svg>
+              )}
+              {skill.name}
+              {isPendingReview && (
+                <span className="text-[10px] text-muted-foreground ml-1">(pending review)</span>
+              )}
+              {skill.shared && (
+                <span className="text-[10px] text-muted-foreground ml-1">(shared)</span>
+              )}
               {canShare && (
-                <button
-                  type="button"
+                <span
+                  role="button"
                   title="Share this skill with everyone"
                   onClick={async (e) => {
                     e.stopPropagation();
@@ -225,17 +224,17 @@ export function HomeHero({ skillId }: HomeHeroProps) {
                       // ignore
                     }
                   }}
-                  className="ml-1 p-1 rounded-full hover:bg-accent text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
+                  className="ml-0.5 p-0.5 rounded-full hover:bg-black/10 text-muted-foreground hover:text-foreground transition-colors"
                 >
-                  <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+                  <svg width="12" height="12" viewBox="0 0 14 14" fill="none">
                     <circle cx="10.5" cy="2.5" r="1.5" stroke="currentColor" strokeWidth="1.2" />
                     <circle cx="10.5" cy="11.5" r="1.5" stroke="currentColor" strokeWidth="1.2" />
                     <circle cx="3.5" cy="7" r="1.5" stroke="currentColor" strokeWidth="1.2" />
                     <path d="M5 6l4-2.5M5 8l4 2.5" stroke="currentColor" strokeWidth="1.2" />
                   </svg>
-                </button>
+                </span>
               )}
-            </div>
+            </button>
           );
         })}
 
